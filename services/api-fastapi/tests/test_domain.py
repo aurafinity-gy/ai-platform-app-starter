@@ -1,6 +1,7 @@
 import pytest
-from starter.domain import validate_title, InvalidTitle
-from starter.application import Principal, Forbidden, create_item, list_items
+from starter.application import Forbidden, Principal, create_item, list_items
+from starter.domain import InvalidTitle, validate_title
+
 
 
 class Members:

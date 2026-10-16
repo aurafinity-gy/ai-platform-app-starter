@@ -1,6 +1,7 @@
 """Application layer — explicit principal, membership and persistence ports."""
 from dataclasses import dataclass
 from typing import Protocol
+
 from .domain import Item, validate_title
 
 

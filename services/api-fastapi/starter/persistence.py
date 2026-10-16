@@ -1,9 +1,11 @@
 """PostgreSQL implementation; tenant context is transaction-local and parameterized."""
-from contextlib import contextmanager
 import os
 import uuid
+from contextlib import contextmanager
+
 import psycopg
 from psycopg.rows import dict_row
+
 from .domain import Item
 
 

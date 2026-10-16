@@ -1,14 +1,17 @@
 """FastAPI composition root; all tenant decisions are server-enforced."""
-from datetime import datetime, timedelta, timezone
 import os
 import uuid
+from datetime import datetime, timedelta, timezone
+from typing import Annotated
+
 import jwt
-from fastapi import Depends, FastAPI, HTTPException, Header
+from fastapi import Depends, FastAPI, Header, HTTPException
 from pydantic import BaseModel, EmailStr, Field
 from pwdlib import PasswordHash
-from .application import Principal, Forbidden, list_items, create_item
-from .domain import Item, InvalidTitle
-from .persistence import connection, PostgresMemberships, PostgresItems
+
+from .application import Forbidden, Principal, create_item, list_items
+from .domain import InvalidTitle
+from .persistence import PostgresItems, PostgresMemberships, connection
 
 app = FastAPI(title="Aurafinity App Starter", version="0.1.0")
 password_hasher = PasswordHash.recommended()
@@ -61,7 +64,7 @@ def login(credentials: LoginRequest):
 
 
 @app.get("/tenants", response_model=list[TenantResponse])
-def tenants(principal: Principal = Depends(current_principal)):
+def tenants(principal: Annotated[Principal, Depends(current_principal)]):
     with connection() as db:
         return db.execute(
             "SELECT t.id,t.name FROM starter.tenants t JOIN starter.memberships m ON m.tenant_id=t.id WHERE m.user_id=%s ORDER BY t.name",
@@ -70,7 +73,7 @@ def tenants(principal: Principal = Depends(current_principal)):
 
 
 @app.get("/tenants/{tenant_id}/items", response_model=list[ItemResponse])
-def get_items(tenant_id: uuid.UUID, principal: Principal = Depends(current_principal)):
+def get_items(tenant_id: uuid.UUID, principal: Annotated[Principal, Depends(current_principal)]):
     with connection() as db:
         try:
             return list_items(principal,str(tenant_id),PostgresMemberships(db),PostgresItems(db))
@@ -79,7 +82,7 @@ def get_items(tenant_id: uuid.UUID, principal: Principal = Depends(current_princ
 
 
 @app.post("/tenants/{tenant_id}/items", response_model=ItemResponse, status_code=201)
-def post_item(tenant_id: uuid.UUID, command: CreateItemRequest, principal: Principal = Depends(current_principal)):
+def post_item(tenant_id: uuid.UUID, command: CreateItemRequest, principal: Annotated[Principal, Depends(current_principal)]):
     with connection() as db:
         try:
             return create_item(principal,str(tenant_id),command.title,PostgresMemberships(db),PostgresItems(db))
